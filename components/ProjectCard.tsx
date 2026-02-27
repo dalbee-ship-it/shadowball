@@ -171,13 +171,12 @@ export function ProjectCard({
               <span className="ui-sans text-xs text-muted flex-shrink-0">{project.progress}%</span>
             </div>
 
-            {project.tasks.length > 0 && (() => {
+            {!expanded && project.tasks.length > 0 && (() => {
               const sorted = [...project.tasks].sort((a, b) => {
                 const order = { running: 0, queued: 1, failed: 2, done: 3 }
                 return (order[a.status as keyof typeof order] ?? 9) - (order[b.status as keyof typeof order] ?? 9)
               })
               const topTask = sorted[0]
-              // 닫힌 상태: 최우선 태스크 1개만
               return (
                 <ul className="mt-1.5 space-y-0.5">
                   <li className="flex items-center gap-1.5 ui-sans" style={{ fontSize: '0.75rem' }}>
