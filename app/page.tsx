@@ -118,7 +118,13 @@ export default function Dashboard() {
             {tab === 'archived' && '보관된 프로젝트가 없어요.'}
           </p>
         ) : (
-          <div className="space-y-3" style={{ opacity: tab === 'archived' ? 0.5 : 1 }}>
+          <div
+            className="grid gap-3"
+            style={{
+              gridTemplateColumns: expandedId ? '1fr' : 'repeat(auto-fill, minmax(160px, 1fr))',
+              opacity: tab === 'archived' ? 0.5 : 1,
+            }}
+          >
             {current.map(p => (
               <ProjectCard
                 key={p.id}
