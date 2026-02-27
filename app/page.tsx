@@ -59,7 +59,10 @@ export default function Dashboard() {
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  const inprogress = projects.filter(p => ['waiting', 'active', 'issue'].includes(p.status))
+  const STATUS_ORDER: Record<string, number> = { issue: 0, active: 1, waiting: 2 }
+  const inprogress = projects
+    .filter(p => ['waiting', 'active', 'issue'].includes(p.status))
+    .sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9))
   const done       = projects.filter(p => p.status === 'done')
   const archived   = projects.filter(p => p.status === 'archived')
 
