@@ -5,6 +5,10 @@ import { ThemeProvider } from '@/lib/theme'
 export const metadata: Metadata = {
   title: 'Shadowball',
   description: 'OpenClaw Agent Monitor',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/icon.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
