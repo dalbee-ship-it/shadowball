@@ -1,13 +1,30 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 
-const STATUS_OPTIONS = [
-  { status: 'waiting',  label: '대기', dot: '#9ca3af' },
-  { status: 'active',   label: '진행', dot: '#22d3ee' },
-  { status: 'issue',    label: '이슈', dot: '#f97316' },
-  { status: 'done',     label: '완료', dot: '#4ade80' },
-  { status: 'archived', label: '보관', dot: '#6b7280' },
+const STATUS_GROUPS = [
+  {
+    label: '할 일',
+    options: [
+      { status: 'waiting', label: '대기', dot: '#9ca3af' },
+    ],
+  },
+  {
+    label: '진행 중',
+    options: [
+      { status: 'active', label: '진행', dot: '#22d3ee' },
+      { status: 'issue',  label: '이슈', dot: '#f97316' },
+    ],
+  },
+  {
+    label: '완료',
+    options: [
+      { status: 'done',     label: '완료', dot: '#4ade80' },
+      { status: 'archived', label: '보관', dot: '#6b7280' },
+    ],
+  },
 ]
+
+const STATUS_OPTIONS = STATUS_GROUPS.flatMap(g => g.options)
 
 const BADGE_COLOR: Record<string, string> = {
   waiting:  'bg-gray-500/20 text-gray-400',
@@ -60,28 +77,40 @@ export function StatusPicker({ current, onChange }: Props) {
       {/* 드롭다운 */}
       {open && (
         <div
-          className="absolute left-0 top-full mt-1 z-50 rounded-xl py-1 min-w-[96px] shadow-xl"
+          className="absolute left-0 top-full mt-1 z-50 rounded-xl py-1.5 min-w-[120px] shadow-2xl"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >
-          {STATUS_OPTIONS.map(opt => (
-            <button
-              key={opt.status}
-              onClick={() => select(opt.status)}
-              disabled={loading !== null}
-              className="ui-sans w-full flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-colors disabled:opacity-50 hover:opacity-80"
-              style={{
-                color: opt.status === current ? 'var(--text-primary)' : 'var(--text-secondary)',
-                fontWeight: opt.status === current ? 700 : 400,
-                background: opt.status === current ? 'var(--bg-input)' : 'transparent',
-              }}
-            >
-              <span
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ background: opt.dot }}
-              />
-              {loading === opt.status ? '...' : opt.label}
-              {opt.status === current && <span className="ml-auto text-xs opacity-50">✓</span>}
-            </button>
+          {STATUS_GROUPS.map((group, gi) => (
+            <div key={group.label}>
+              {/* 그룹 구분선 (첫 번째 제외) */}
+              {gi > 0 && (
+                <div className="my-1 mx-2" style={{ borderTop: '1px solid var(--border)' }} />
+              )}
+              {/* 그룹 라벨 */}
+              <div className="px-3 py-1 ui-sans text-xs" style={{ color: 'var(--text-muted)' }}>
+                {group.label}
+              </div>
+              {/* 옵션들 */}
+              {group.options.map(opt => (
+                <button
+                  key={opt.status}
+                  onClick={() => select(opt.status)}
+                  disabled={loading !== null}
+                  className="ui-sans w-full flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer disabled:opacity-50"
+                  style={{
+                    color: opt.status === current ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    fontWeight: opt.status === current ? 600 : 400,
+                    background: opt.status === current ? 'var(--bg-input)' : 'transparent',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-input)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = opt.status === current ? 'var(--bg-input)' : 'transparent')}
+                >
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: opt.dot }} />
+                  {loading === opt.status ? '...' : opt.label}
+                  {opt.status === current && <span className="ml-auto text-xs" style={{ color: 'var(--text-muted)' }}>✓</span>}
+                </button>
+              ))}
+            </div>
           ))}
         </div>
       )}
