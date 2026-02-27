@@ -1,6 +1,6 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+import { supabase } from '@/lib/supabase'
 import { PokemonSprite } from './PokemonSprite'
 
 interface Task {
@@ -8,6 +8,13 @@ interface Task {
   title: string
   status: 'queued' | 'running' | 'done' | 'failed'
   agent_label: string
+}
+
+interface Log {
+  id: string
+  type: 'system' | 'agent' | 'user'
+  message: string
+  created_at: string
 }
 
 interface Project {
@@ -20,118 +27,191 @@ interface Project {
   tasks: Task[]
 }
 
-const STATUS_ICON: Record<string, string> = {
-  queued: '○',
-  running: '▶',
-  done: '✓',
-  failed: '✗',
-}
 const STATUS_COLOR: Record<string, string> = {
   queued: 'text-gray-500',
   running: 'text-cyan-400 animate-pulse',
   done: 'text-green-400',
   failed: 'text-red-400',
 }
-
+const STATUS_ICON: Record<string, string> = {
+  queued: '○', running: '▶', done: '✓', failed: '✗',
+}
 const ACTION_BUTTONS = [
-  { status: 'done',     label: '완료',  color: 'bg-green-500 hover:bg-green-400 text-black' },
-  { status: 'paused',   label: '보류',  color: 'bg-yellow-500 hover:bg-yellow-400 text-black' },
-  { status: 'archived', label: '보관',  color: 'bg-gray-600 hover:bg-gray-500 text-white' },
-  { status: 'abandoned',label: '폐기',  color: 'bg-red-600 hover:bg-red-500 text-white' },
+  { status: 'done',      label: '완료', color: 'bg-green-500 hover:bg-green-400 text-black' },
+  { status: 'paused',    label: '보류', color: 'bg-yellow-500 hover:bg-yellow-400 text-black' },
+  { status: 'archived',  label: '보관', color: 'bg-gray-600 hover:bg-gray-500 text-white' },
+  { status: 'abandoned', label: '폐기', color: 'bg-red-600 hover:bg-red-500 text-white' },
 ]
+const LOG_COLOR = { system: 'text-gray-500', agent: 'text-cyan-400', user: 'text-white' }
+const LOG_PREFIX = { system: '·', agent: '▶', user: '›' }
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+}
 
 export function ProjectCard({ project, onUpdate }: { project: Project; onUpdate: () => void }) {
+  const [expanded, setExpanded] = useState(false)
   const [hovered, setHovered] = useState(false)
-  const [loading, setLoading] = useState<string | null>(null)
-  const router = useRouter()
+  const [logs, setLogs] = useState<Log[]>([])
+  const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+  const [statusLoading, setStatusLoading] = useState<string | null>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
   const runningCount = project.tasks.filter(t => t.status === 'running').length
 
+  // 로그 로드 + 실시간 구독
+  useEffect(() => {
+    if (!expanded) return
+
+    fetch(`/api/logs?project_id=${project.id}`)
+      .then(r => r.json())
+      .then(data => setLogs(Array.isArray(data) ? data : []))
+
+    const channel = supabase
+      .channel(`log-${project.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'logs',
+        filter: `project_id=eq.${project.id}`
+      }, payload => {
+        setLogs(prev => [...prev, payload.new as Log])
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [expanded, project.id])
+
+  // 새 로그 → 스크롤 하단
+  useEffect(() => {
+    if (expanded) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [logs, expanded])
+
   async function changeStatus(status: string) {
-    setLoading(status)
+    setStatusLoading(status)
     await fetch(`/api/projects/${project.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
-    setLoading(null)
-    setHovered(false)
+    setStatusLoading(null)
     onUpdate()
+  }
+
+  async function sendLog(e: React.FormEvent) {
+    e.preventDefault()
+    if (!input.trim()) return
+    setSending(true)
+    await fetch('/api/logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project_id: project.id, message: input.trim(), type: 'user' }),
+    })
+    setInput('')
+    setSending(false)
   }
 
   const availableActions = ACTION_BUTTONS.filter(a => a.status !== project.status)
 
   return (
     <div
-      className="bg-gray-900 border border-gray-800 rounded-xl p-3 flex gap-3 transition-colors cursor-pointer"
-      style={{ borderColor: hovered ? '#4B5563' : undefined }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onTouchStart={() => setHovered(v => !v)}
-      onClick={() => { if (loading === null) router.push(`/project/${project.id}`) }}
+      className="bg-gray-900 border rounded-xl transition-all duration-200 overflow-hidden"
+      style={{
+        borderColor: expanded ? '#06b6d4' : hovered ? '#4B5563' : '#1f2937',
+        transform: hovered && !expanded ? 'scale(1.01)' : 'scale(1)',
+      }}
     >
-      <div className="flex-shrink-0 flex items-center">
-        <PokemonSprite
-          pokemonId={project.pokemon_id}
-          progress={project.progress}
-          lastUpdatedAt={project.last_updated_at}
-          size={56}
-        />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        {/* 상단: 이름 + 진행도 */}
-        <div className="flex justify-between items-center gap-2">
-          <h3 className="text-white font-bold text-sm truncate">{project.name}</h3>
-          <div className="flex items-center gap-2 flex-shrink-0 ui-sans">
-            {runningCount > 0 && (
-              <span className="text-xs text-cyan-400 animate-pulse">{runningCount} running</span>
-            )}
-            <span className="text-xs text-gray-500">{project.progress}%</span>
-          </div>
-        </div>
-
-        {/* 진행도 바 */}
-        <div className="mt-1.5 h-1 bg-gray-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-cyan-400 rounded-full transition-all duration-700"
-            style={{ width: `${project.progress}%` }}
+      {/* 카드 헤더 — 항상 보임 */}
+      <div
+        className="p-3 flex gap-3 cursor-pointer select-none"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={() => setExpanded(v => !v)}
+      >
+        <div className="flex-shrink-0 flex items-center">
+          <PokemonSprite
+            pokemonId={project.pokemon_id}
+            progress={project.progress}
+            lastUpdatedAt={project.last_updated_at}
+            size={56}
           />
         </div>
-
-        {/* 호버 시 액션 버튼 / 평소엔 태스크 목록 */}
-        <div className="mt-2 min-h-[1.5rem]">
-          {hovered ? (
-            <div className="flex flex-wrap gap-1.5">
-              {availableActions.map(action => (
-                <button
-                  key={action.status}
-                  onClick={e => { e.stopPropagation(); changeStatus(action.status) }}
-                  disabled={loading !== null}
-                  className={`ui-sans text-xs font-semibold px-3 py-1 rounded-md cursor-pointer transition-colors ${action.color} disabled:opacity-50`}
-                >
-                  {loading === action.status ? '...' : action.label}
-                </button>
-              ))}
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-center gap-2">
+            <h3 className="text-white font-bold text-sm truncate">{project.name}</h3>
+            <div className="flex items-center gap-2 flex-shrink-0 ui-sans">
+              {runningCount > 0 && <span className="text-xs text-cyan-400 animate-pulse">{runningCount} running</span>}
+              <span className="text-xs text-gray-500">{project.progress}%</span>
+              <span className="text-gray-600 text-xs">{expanded ? '▲' : '▼'}</span>
             </div>
-          ) : (
-            <ul className="space-y-0.5">
-              {project.tasks.slice(0, 3).map(task => (
+          </div>
+          <div className="mt-1.5 h-1 bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-full bg-cyan-400 rounded-full transition-all duration-700" style={{ width: `${project.progress}%` }} />
+          </div>
+          {/* 태스크 — 접힌 상태에서만 표시 */}
+          {!expanded && project.tasks.length > 0 && (
+            <ul className="mt-2 space-y-0.5">
+              {project.tasks.slice(0, 2).map(task => (
                 <li key={task.id} className="flex items-center gap-1.5 text-xs ui-sans">
                   <span className={`flex-shrink-0 ${STATUS_COLOR[task.status]}`}>{STATUS_ICON[task.status]}</span>
                   <span className="text-gray-400 truncate">{task.title}</span>
-                  <span className="text-gray-600 ml-auto flex-shrink-0">{task.agent_label}</span>
                 </li>
               ))}
-              {project.tasks.length > 3 && (
-                <li className="text-xs text-gray-600 ui-sans">+{project.tasks.length - 3} more</li>
-              )}
-              {project.tasks.length === 0 && (
-                <li className="text-xs text-gray-700 ui-sans italic">No tasks yet</li>
-              )}
+              {project.tasks.length > 2 && <li className="text-xs text-gray-700 ui-sans">+{project.tasks.length - 2} more</li>}
             </ul>
           )}
         </div>
       </div>
+
+      {/* 펼쳐진 영역 */}
+      {expanded && (
+        <div className="border-t border-gray-800">
+          {/* 로그 타임라인 */}
+          <div className="px-4 py-3 space-y-1.5 max-h-56 overflow-y-auto">
+            {logs.length === 0
+              ? <p className="ui-sans text-xs text-gray-700 italic">아직 기록이 없어요.</p>
+              : logs.map(log => (
+                <div key={log.id} className="flex items-start gap-2">
+                  <span className={`ui-sans text-xs flex-shrink-0 mt-0.5 ${LOG_COLOR[log.type]}`}>{LOG_PREFIX[log.type]}</span>
+                  <span className="ui-sans text-xs text-gray-600 flex-shrink-0 w-10">{formatTime(log.created_at)}</span>
+                  <span className={`text-sm leading-snug ${log.type === 'user' ? 'text-white' : log.type === 'agent' ? 'text-cyan-300' : 'text-gray-400'}`}>
+                    {log.message}
+                  </span>
+                </div>
+              ))
+            }
+            <div ref={bottomRef} />
+          </div>
+
+          {/* 입력창 */}
+          <form onSubmit={sendLog} className="flex gap-2 px-4 pb-3">
+            <input
+              className="ui-sans flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors placeholder-gray-600"
+              placeholder="메모 또는 명령..."
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              disabled={sending}
+            />
+            <button
+              type="submit"
+              disabled={sending || !input.trim()}
+              className="ui-sans bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 text-black font-bold px-3 py-2 rounded-lg transition-colors cursor-pointer text-sm"
+            >→</button>
+          </form>
+
+          {/* 상태 변경 */}
+          <div className="flex gap-1.5 px-4 pb-3">
+            {availableActions.map(action => (
+              <button
+                key={action.status}
+                onClick={() => changeStatus(action.status)}
+                disabled={statusLoading !== null}
+                className={`ui-sans text-xs font-semibold px-3 py-1 rounded-md cursor-pointer transition-colors ${action.color} disabled:opacity-50`}
+              >
+                {statusLoading === action.status ? '...' : action.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
