@@ -12,6 +12,7 @@ interface Project {
   pokemon_id: number
   status: string
   last_updated_at: string
+  due_date: string | null
   tasks: { id: string; title: string; status: 'queued' | 'running' | 'done' | 'failed'; agent_label: string }[]
 }
 
