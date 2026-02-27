@@ -20,20 +20,13 @@ export async function POST(req: Request) {
 
   let data, error
   if (existing) {
-    const update: Record<string, unknown> = { status: body.status }
-    if (body.status === 'running') update.started_at = new Date().toISOString()
-    if (body.status === 'done' || body.status === 'failed') {
-      update.ended_at = new Date().toISOString()
-      if (body.result) update.result = body.result
-    }
-    ;({ data, error } = await supabase.from('tasks').update(update).eq('id', existing.id).select().single())
+    ;({ data, error } = await supabase.from('tasks').update({ status: body.status }).eq('id', existing.id).select().single())
   } else {
     ;({ data, error } = await supabase.from('tasks').insert({
       project_id: body.project_id,
       agent_label: body.agent_label,
       title: body.title,
       status: body.status,
-      started_at: body.status === 'running' ? new Date().toISOString() : null,
     }).select().single())
   }
 
