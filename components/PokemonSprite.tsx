@@ -24,7 +24,10 @@ export function PokemonSprite({ pokemonId, progress, lastUpdatedAt, size = 80 }:
           alt={`pokemon-${actualId}`}
           width={size}
           height={size}
-          style={{ imageRendering: 'pixelated' }}
+          style={{
+            imageRendering: 'pixelated',
+            filter: 'drop-shadow(1px 0 0 var(--bg-card)) drop-shadow(-1px 0 0 var(--bg-card)) drop-shadow(0 1px 0 var(--bg-card)) drop-shadow(0 -1px 0 var(--bg-card))',
+          }}
           unoptimized
         />
       </div>
