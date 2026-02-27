@@ -90,9 +90,15 @@ export function ProjectCard({
         onMouseLeave={() => setHovered(false)}
         onClick={() => onToggle(expanded ? null : project.id)}
       >
-        <div className="flex gap-3 items-start">
-          {/* 포켓몬 */}
-          <div className="flex-shrink-0" style={{ transition: 'transform 0.3s ease' }}>
+        <div className="flex gap-3 items-center">
+          {/* 포켓몬 — 닫힘:중앙, 열림:위 (translateY로 애니메이션) */}
+          <div
+            className="flex-shrink-0 self-center"
+            style={{
+              transform: expanded ? 'translateY(-12px)' : 'translateY(0)',
+              transition: 'transform 0.3s ease',
+            }}
+          >
             <PokemonSprite
               pokemonId={project.pokemon_id}
               progress={project.progress}
