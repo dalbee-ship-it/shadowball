@@ -120,57 +120,51 @@ export function ProjectCard({
         onMouseLeave={() => setHovered(false)}
         onClick={() => onToggle(expanded ? null : project.id)}
       >
-        {/* 상태 + 토글 */}
-        <div className="flex items-center justify-between mb-3">
-          <StatusPicker current={project.status} onChange={changeStatus} />
-          <div className="flex items-center gap-2 ui-sans">
-            {runningCount > 0 && (
-              <span className="text-xs text-cyan-400 animate-pulse">{runningCount} running</span>
-            )}
-            <span className="text-muted text-sm">{expanded ? '▲' : '▼'}</span>
-          </div>
-        </div>
-
-        {/* 포켓몬 — 중앙 크게 */}
-        <div className="flex justify-center mb-2">
-          <PokemonSprite
-            pokemonId={project.pokemon_id}
-            progress={project.progress}
-            lastUpdatedAt={project.last_updated_at}
-            size={128}
-          />
-        </div>
-
-        {/* 프로젝트 이름 — 중앙 */}
-        <h3 className="font-bold text-primary leading-tight mb-3 text-center" style={{ fontSize: '1.1rem' }}>
-          {project.name}
-        </h3>
-
-        {/* 진행도 */}
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
-            <div
-              className="h-full bg-cyan-400 rounded-full transition-all duration-700"
-              style={{ width: `${project.progress}%` }}
+        <div className="flex gap-3 items-center">
+          {/* 포켓몬 */}
+          <div className="flex-shrink-0">
+            <PokemonSprite
+              pokemonId={project.pokemon_id}
+              progress={project.progress}
+              lastUpdatedAt={project.last_updated_at}
+              size={72}
             />
           </div>
-          <span className="ui-sans text-xs text-muted flex-shrink-0">{project.progress}%</span>
-        </div>
 
-        {/* 태스크 미리보기 */}
-        {!expanded && project.tasks.length > 0 && (
-          <ul className="mt-2.5 space-y-1">
-            {project.tasks.slice(0, 2).map(task => (
-              <li key={task.id} className="flex items-center gap-1.5 ui-sans" style={{ fontSize: '0.8rem' }}>
-                <span className={`flex-shrink-0 ${TASK_STATUS_COLOR[task.status]}`}>{TASK_STATUS_ICON[task.status]}</span>
-                <span className="text-secondary truncate">{task.title}</span>
-              </li>
-            ))}
-            {project.tasks.length > 2 && (
-              <li className="text-muted ui-sans" style={{ fontSize: '0.75rem' }}>+{project.tasks.length - 2} more</li>
+          {/* 콘텐츠 */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <StatusPicker current={project.status} onChange={changeStatus} />
+              <div className="flex items-center gap-2 ui-sans">
+                {runningCount > 0 && <span className="text-xs text-cyan-400 animate-pulse">{runningCount} running</span>}
+                <span className="text-muted text-sm">{expanded ? '▲' : '▼'}</span>
+              </div>
+            </div>
+
+            <h3 className="font-bold text-primary leading-tight mb-2" style={{ fontSize: '1rem' }}>
+              {project.name}
+            </h3>
+
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 progress-track rounded-full overflow-hidden">
+                <div className="h-full bg-cyan-400 rounded-full transition-all duration-700" style={{ width: `${project.progress}%` }} />
+              </div>
+              <span className="ui-sans text-xs text-muted flex-shrink-0">{project.progress}%</span>
+            </div>
+
+            {!expanded && project.tasks.length > 0 && (
+              <ul className="mt-1.5 space-y-0.5">
+                {project.tasks.slice(0, 2).map(task => (
+                  <li key={task.id} className="flex items-center gap-1.5 ui-sans" style={{ fontSize: '0.75rem' }}>
+                    <span className={`flex-shrink-0 ${TASK_STATUS_COLOR[task.status]}`}>{TASK_STATUS_ICON[task.status]}</span>
+                    <span className="text-secondary truncate">{task.title}</span>
+                  </li>
+                ))}
+                {project.tasks.length > 2 && <li className="text-muted ui-sans" style={{ fontSize: '0.7rem' }}>+{project.tasks.length - 2} more</li>}
+              </ul>
             )}
-          </ul>
-        )}
+          </div>
+        </div>
       </div>
 
       {/* 펼쳐진 영역 */}
