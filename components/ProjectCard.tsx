@@ -80,9 +80,7 @@ export function ProjectCard({
     return () => { supabase.removeChannel(channel) }
   }, [expanded, project.id])
 
-  useEffect(() => {
-    if (expanded) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [logs, expanded])
+
 
   async function changeStatus(status: string) {
     await fetch(`/api/projects/${project.id}`, {
