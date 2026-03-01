@@ -1,8 +1,8 @@
-# Aqua Jet — 설계 문서
+# Mega Launcher — 설계 문서
 > OpenClaw 에이전트 모니터링 + 포켓몬 프로젝트 관리 대시보드
 
 ## 개요
-- **앱 이름**: Aqua Jet
+- **앱 이름**: Mega Launcher
 - **마스코트**: 다크라이
 - **목적**: OpenClaw 서브에이전트들이 뭘 하는지 실시간으로 보고, 프로젝트 진행도를 포켓몬 진화로 gamify
 - **오픈소스**: GitHub 공개 예정 (OpenClaw 전용 시작 → 어댑터로 확장)
@@ -93,7 +93,7 @@ httpx.patch(f"{SUPABASE_URL}/rest/v1/projects?id=eq.{project_id}", json={"progre
 
 ## 디렉토리 구조
 ```
-aqua-jet/
+mega-launcher/
 ├── app/
 │   ├── page.tsx          # 메인 대시보드
 │   ├── project/[id]/     # 프로젝트 상세

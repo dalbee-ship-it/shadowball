@@ -1,4 +1,4 @@
-# Aqua Jet MVP Implementation Plan
+# Mega Launcher MVP Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
@@ -70,15 +70,15 @@ SUPABASE_SERVICE_ROLE_KEY=...
 ## Task 2: Next.js 프로젝트 초기화
 
 **Files:**
-- Create: `aqua-jet/` (프로젝트 루트)
+- Create: `mega-launcher/` (프로젝트 루트)
 
 **Step 1: 프로젝트 생성**
 ```bash
 cd /root/.openclaw/workspace/projects
-npx create-next-app@latest aqua-jet \
+npx create-next-app@latest mega-launcher \
   --typescript --tailwind --app --no-src-dir \
   --import-alias "@/*"
-cd aqua-jet
+cd mega-launcher
 ```
 
 **Step 2: 의존성 설치**
@@ -112,7 +112,7 @@ npm run dev
 
 **Step 6: Commit**
 ```bash
-git init && git add . && git commit -m "feat: init aqua-jet next.js project"
+git init && git add . && git commit -m "feat: init mega-launcher next.js project"
 ```
 
 ---
@@ -403,7 +403,7 @@ export function BlastoiseHeader() {
         style={{ imageRendering: 'pixelated' }}
       />
       <div>
-        <h1 className="text-2xl font-mono font-bold text-white tracking-tight">Aqua Jet</h1>
+        <h1 className="text-2xl font-mono font-bold text-white tracking-tight">Mega Launcher</h1>
         <p className="text-xs text-gray-500 font-mono">OpenClaw Agent Monitor</p>
       </div>
     </header>
@@ -535,13 +535,13 @@ git add app components && git commit -m "feat: add dashboard and new project pag
 
 **Step 1: GitHub 레포 생성**
 ```bash
-gh repo create dalbee-ship-it/aqua-jet --public --source=. --push
+gh repo create dalbee-ship-it/mega-launcher --public --source=. --push
 ```
 
 **Step 2: Vercel 연결**
 ```bash
 npx vercel --token <VERCEL_TOKEN>
-# 프로젝트명: aqua-jet
+# 프로젝트명: mega-launcher
 ```
 
 **Step 3: 환경변수 Vercel에 등록**
@@ -569,7 +569,7 @@ npx vercel --prod
 # 작업 시작 시
 import httpx
 httpx.post(
-  "https://aqua-jet.vercel.app/api/tasks",
+  "https://mega-launcher.vercel.app/api/tasks",
   json={
     "project_id": "PROJECT_UUID",
     "agent_label": "t-mcp-servers",
@@ -580,7 +580,7 @@ httpx.post(
 
 # 완료 시
 httpx.post(
-  "https://aqua-jet.vercel.app/api/tasks",
+  "https://mega-launcher.vercel.app/api/tasks",
   json={
     "project_id": "PROJECT_UUID",
     "agent_label": "t-mcp-servers",
