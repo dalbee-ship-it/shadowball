@@ -535,7 +535,7 @@ git add app components && git commit -m "feat: add dashboard and new project pag
 
 **Step 1: GitHub 레포 생성**
 ```bash
-gh repo create dalbee-ship-it/hydro-pump --public --source=. --push
+gh repo create thedalbee/hydro-pump --public --source=. --push
 ```
 
 **Step 2: Vercel 연결**

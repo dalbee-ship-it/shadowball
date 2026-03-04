@@ -75,7 +75,7 @@ When progress hits 100%, the project status flips to `done` and the Pokémon rea
 ### 1. Clone
 
 ```bash
-git clone https://github.com/dalbee-ship-it/hydro-pump
+git clone https://github.com/thedalbee/hydro-pump
 cd hydro-pump
 npm install
 ```
@@ -186,9 +186,9 @@ If you made it this far, you probably like Pokémon and AI agents.
 
 We have that in common.
 
-[**Star this repo**](https://github.com/dalbee-ship-it/hydro-pump) so more people can find it. Takes 1 second, means a lot.
+[**Star this repo**](https://github.com/thedalbee/hydro-pump) so more people can find it. Takes 1 second, means a lot.
 
-[![GitHub stars](https://img.shields.io/github/stars/dalbee-ship-it/hydro-pump?style=social)](https://github.com/dalbee-ship-it/hydro-pump)
+[![GitHub stars](https://img.shields.io/github/stars/thedalbee/hydro-pump?style=social)](https://github.com/thedalbee/hydro-pump)
 
 ---
 
